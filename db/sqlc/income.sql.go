@@ -55,8 +55,27 @@ func (q *Queries) DeleteIncome(ctx context.Context, id int32) error {
 	return err
 }
 
+const getIncome = `-- name: GetIncome :one
+SELECT id, category_id, account_id, amount, date FROM income
+WHERE id = $1
+LIMIT 1
+`
+
+func (q *Queries) GetIncome(ctx context.Context, id int32) (Income, error) {
+	row := q.db.QueryRowContext(ctx, getIncome, id)
+	var i Income
+	err := row.Scan(
+		&i.ID,
+		&i.CategoryID,
+		&i.AccountID,
+		&i.Amount,
+		&i.Date,
+	)
+	return i, err
+}
+
 const getTotalIncomeByAccountAndDate = `-- name: GetTotalIncomeByAccountAndDate :one
-SELECT SUM(amount) FROM income
+SELECT COALESCE(SUM(amount), 0) FROM income
 WHERE account_id = $1
 AND date BETWEEN $2 AND $3
 `
@@ -67,11 +86,11 @@ type GetTotalIncomeByAccountAndDateParams struct {
 	EndDate   time.Time     `json:"end_date"`
 }
 
-func (q *Queries) GetTotalIncomeByAccountAndDate(ctx context.Context, arg GetTotalIncomeByAccountAndDateParams) (int64, error) {
+func (q *Queries) GetTotalIncomeByAccountAndDate(ctx context.Context, arg GetTotalIncomeByAccountAndDateParams) (interface{}, error) {
 	row := q.db.QueryRowContext(ctx, getTotalIncomeByAccountAndDate, arg.AccountID, arg.StartDate, arg.EndDate)
-	var sum int64
-	err := row.Scan(&sum)
-	return sum, err
+	var coalesce interface{}
+	err := row.Scan(&coalesce)
+	return coalesce, err
 }
 
 const listIncomeByAccountAndDate = `-- name: ListIncomeByAccountAndDate :many

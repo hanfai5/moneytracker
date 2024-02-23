@@ -1,6 +1,6 @@
 -- name: CreateAccount :one
 INSERT INTO accounts (
-    users_id, balance
+    user_id, balance
 ) VALUES (
     $1, $2
 ) RETURNING *;

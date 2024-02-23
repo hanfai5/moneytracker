@@ -36,7 +36,7 @@ func RandomDate() time.Time {
 	max := time.Date(2070, 1, 0, 0, 0, 0, 0, time.UTC).Unix()
 
 	sec := min + rand.Int63n(max-min)
-	return time.Unix(sec, 0)
+	return time.Unix(sec, 0).UTC()
 }
 
 // RandomColorHexString generates a random hex color string

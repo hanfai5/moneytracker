@@ -6,6 +6,11 @@ INSERT INTO income (
 )
 RETURNING *;
 
+-- name: GetIncome :one
+SELECT * FROM income
+WHERE id = $1
+LIMIT 1;
+
 -- name: ListIncomeByAccountAndDate :many
 SELECT * FROM income 
 WHERE account_id = $1
@@ -15,7 +20,7 @@ LIMIT $2
 OFFSET $3;
 
 -- name: GetTotalIncomeByAccountAndDate :one
-SELECT SUM(amount) FROM income
+SELECT COALESCE(SUM(amount), 0) FROM income
 WHERE account_id = $1
 AND date BETWEEN sqlc.arg(start_date) AND sqlc.arg(end_date);
 
