@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	db "moneytracker/db/sqlc"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -85,4 +86,92 @@ func (server *Server) ListExpenseCategories(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, categories)
+}
+
+type UpdateExpenseCategoryColorRequest struct {
+	Color string `json:"color" binding:"required"`
+}
+
+func (server *Server) UpdateExpenseCategoryColor(ctx *gin.Context) {
+	loc := getExpenseCategoryRequest{}
+	req := UpdateExpenseCategoryColorRequest{}
+
+	if err := ctx.ShouldBindUri(&loc); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.UpdateExpenseCategoryColorParams{
+		Color: req.Color,
+		ID:    loc.ID,
+	}
+
+	category, err := server.queries.UpdateExpenseCategoryColor(ctx, arg)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, category)
+}
+
+type UpdateExpenseCategoryNameRequest struct {
+	Name string `json:"name" binding:"required"`
+}
+
+func (server *Server) UpdateExpenseCategoryName(ctx *gin.Context) {
+	loc := getIncomeCategoryRequest{}
+	req := UpdateExpenseCategoryNameRequest{}
+
+	if err := ctx.ShouldBindUri(&loc); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.UpdateExpenseCategoryNameParams{
+		Name: req.Name,
+		ID:   loc.ID,
+	}
+
+	category, err := server.queries.UpdateExpenseCategoryName(ctx, arg)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+	}
+
+	ctx.JSON(http.StatusOK, category)
+}
+
+func (server *Server) DeleteExpenseCategory(ctx *gin.Context) {
+	loc := getExpenseCategoryRequest{}
+
+	if err := ctx.ShouldBindUri(&loc); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	err := server.queries.DeleteExpenseCategory(ctx, loc.ID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "deleted successfully id " + strconv.Itoa(int(loc.ID))})
 }

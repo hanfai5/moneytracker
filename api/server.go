@@ -26,6 +26,9 @@ func NewServer(queries *db.Queries) *Server {
 	router.POST("/expense_categories", server.CreateExpenseCategory)
 	router.GET("/expense_categories/:id", server.GetExpenseCategory)
 	router.GET("/expense_categories", server.ListExpenseCategories)
+	router.PATCH("/expense_categories/color/:id", server.UpdateExpenseCategoryColor)
+	router.PATCH("/expense_categories/name/:id", server.UpdateExpenseCategoryName)
+	router.DELETE("/expense_categories/:id", server.DeleteExpenseCategory)
 	server.router = router
 	return &server
 }
