@@ -29,6 +29,11 @@ func NewServer(queries *db.Queries) *Server {
 	router.PATCH("/expense_categories/color/:id", server.UpdateExpenseCategoryColor)
 	router.PATCH("/expense_categories/name/:id", server.UpdateExpenseCategoryName)
 	router.DELETE("/expense_categories/:id", server.DeleteExpenseCategory)
+	router.POST("/users", server.CreateUser)
+	router.GET("/users/:id", server.GetUser)
+	router.GET("/users", server.ListUsers)
+	router.PATCH("/users/:id", server.UpdateUser)
+	router.DELETE("/users/:id", server.DeleteUser)
 	server.router = router
 	return &server
 }
