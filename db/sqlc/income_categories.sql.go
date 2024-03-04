@@ -70,7 +70,7 @@ func (q *Queries) ListIncomeCategories(ctx context.Context, arg ListIncomeCatego
 		return nil, err
 	}
 	defer rows.Close()
-	var items []IncomeCategories
+	items := []IncomeCategories{}
 	for rows.Next() {
 		var i IncomeCategories
 		if err := rows.Scan(&i.ID, &i.Name, &i.Color); err != nil {

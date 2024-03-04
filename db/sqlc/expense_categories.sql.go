@@ -69,7 +69,7 @@ func (q *Queries) ListExpenseCategories(ctx context.Context, arg ListExpenseCate
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ExpenseCategories
+	items := []ExpenseCategories{}
 	for rows.Next() {
 		var i ExpenseCategories
 		if err := rows.Scan(&i.ID, &i.Name, &i.Color); err != nil {

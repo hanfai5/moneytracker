@@ -122,7 +122,7 @@ func (q *Queries) ListIncomeByAccountAndDate(ctx context.Context, arg ListIncome
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Income
+	items := []Income{}
 	for rows.Next() {
 		var i Income
 		if err := rows.Scan(
