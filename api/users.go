@@ -10,7 +10,9 @@ import (
 )
 
 type createUserRequest struct {
-	Name string `json:"name" binding:"required"`
+	Name           string `json:"name" binding:"required"`
+	Email          string `json:"email" binding:"required"`
+	HashedPassword string `json:"hashed_password" binding:"required"`
 }
 
 func (server *Server) CreateUser(ctx *gin.Context) {
@@ -21,7 +23,13 @@ func (server *Server) CreateUser(ctx *gin.Context) {
 		return
 	}
 
-	user, err := server.queries.CreateUser(ctx, req.Name)
+	arg := db.CreateUserParams{
+		Name:           req.Name,
+		Email:          req.Email,
+		HashedPassword: req.HashedPassword,
+	}
+
+	user, err := server.queries.CreateUser(ctx, arg)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
