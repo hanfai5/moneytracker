@@ -3,16 +3,26 @@ package api
 import (
 	"database/sql"
 	db "moneytracker/db/sqlc"
+	"moneytracker/db/util"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
 type createUserRequest struct {
-	Name           string `json:"name" binding:"required"`
-	Email          string `json:"email" binding:"required"`
-	HashedPassword string `json:"hashed_password" binding:"required"`
+	Name     string `json:"name" binding:"required"`
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
+}
+
+type createUserResponse struct {
+	ID                int32     `json:"id"`
+	Name              string    `json:"name"`
+	Email             string    `json:"email"`
+	PasswordChangedAt time.Time `json:"password_changed_at"`
+	CreatedAt         time.Time `json:"created_at"`
 }
 
 func (server *Server) CreateUser(ctx *gin.Context) {
@@ -23,10 +33,15 @@ func (server *Server) CreateUser(ctx *gin.Context) {
 		return
 	}
 
+	hashedPassword, err := util.HashPassword(req.Password)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+	}
+
 	arg := db.CreateUserParams{
 		Name:           req.Name,
 		Email:          req.Email,
-		HashedPassword: req.HashedPassword,
+		HashedPassword: hashedPassword,
 	}
 
 	user, err := server.queries.CreateUser(ctx, arg)
@@ -35,7 +50,15 @@ func (server *Server) CreateUser(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, user)
+	rsp := createUserResponse{
+		ID:                user.ID,
+		Name:              user.Name,
+		Email:             user.Email,
+		PasswordChangedAt: user.PasswordChangedAt,
+		CreatedAt:         user.CreatedAt,
+	}
+
+	ctx.JSON(http.StatusOK, rsp)
 }
 
 type getUserRequest struct {
