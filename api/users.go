@@ -17,22 +17,12 @@ type createUserRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
-type userResponse struct {
+type createUserResponse struct {
 	ID                int32     `json:"id"`
 	Name              string    `json:"name"`
 	Email             string    `json:"email"`
 	PasswordChangedAt time.Time `json:"password_changed_at"`
 	CreatedAt         time.Time `json:"created_at"`
-}
-
-func newUserResponse(user db.Users) userResponse {
-	return userResponse{
-		ID:                user.ID,
-		Name:              user.Name,
-		Email:             user.Email,
-		PasswordChangedAt: user.PasswordChangedAt,
-		CreatedAt:         user.CreatedAt,
-	}
 }
 
 func (server *Server) CreateUser(ctx *gin.Context) {
@@ -60,7 +50,13 @@ func (server *Server) CreateUser(ctx *gin.Context) {
 		return
 	}
 
-	rsp := newUserResponse(user)
+	rsp := createUserResponse{
+		ID:                user.ID,
+		Name:              user.Name,
+		Email:             user.Email,
+		PasswordChangedAt: user.PasswordChangedAt,
+		CreatedAt:         user.CreatedAt,
+	}
 
 	ctx.JSON(http.StatusOK, rsp)
 }
@@ -168,51 +164,4 @@ func (server *Server) DeleteUser(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"message": "deleted successfully id " + strconv.Itoa(int(loc.ID))})
-}
-
-type loginUserRequest struct {
-	ID       int32  `json:"id" binding:"required,min=1"`
-	Name     string `json:"name" binding:"required"`
-	Password string `json:"password" binding:"required"`
-}
-
-type loginUserResponse struct {
-	AccessToken string       `json:"access_token"`
-	User        userResponse `json:"user_response"`
-}
-
-func (server *Server) LoginUser(ctx *gin.Context) {
-	req := loginUserRequest{}
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	user, err := server.queries.GetUser(ctx, req.ID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	if err := util.CheckPassword(req.Password, user.HashedPassword); err != nil {
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
-	}
-
-	accessToken, err := server.tokenMaker.CreateToken(req.Name, server.config.AccessTokenDuration)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	rsp := loginUserResponse{
-		AccessToken: accessToken,
-		User:        newUserResponse(user),
-	}
-
-	ctx.JSON(http.StatusOK, rsp)
 }
